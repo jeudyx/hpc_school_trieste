@@ -1,11 +1,11 @@
 import numpy as np
 
 
-def contains_point(r, point):
+def _contains_point(r, point):
     return r >= (np.linalg.norm(point))
 
 
-def get_position_from_a_to_b(a, b):
+def _get_position_from_a_to_b(a, b):
     """ Generates 3D positions from a to b using: (b - a) * random_sample() + a
     Assumes that a is less than b
 
@@ -16,7 +16,7 @@ def get_position_from_a_to_b(a, b):
     return (b - a) * np.random.random_sample(3) + a
 
 
-def generate_sphere_position_distribution(radius, N):
+def generate_sphere_position_distribution(radius, n):
 
     """Generate particle distribution in the shape of s sphere
 
@@ -27,12 +27,21 @@ def generate_sphere_position_distribution(radius, N):
     """
     positions = []
 
-    while len(positions) < N:
-        position = get_position_from_a_to_b(-radius, radius)
-        if contains_point(radius, position):
+    while len(positions) < n:
+        position = _get_position_from_a_to_b(-radius, radius)
+        if _contains_point(radius, position):
             positions.append(position)
 
     return np.array(positions)
+
+
+def generate_velocities_distribution(n, vmin, vmax):
+    return (vmax - vmin) * np.random.random_sample((n, 3)) + vmin
+
+
+def generate_mass_distribution(total_mass, n):
+    particle_mass = total_mass / n
+    return np.ones(n) * particle_mass
 
 
 def save_points(points, path):

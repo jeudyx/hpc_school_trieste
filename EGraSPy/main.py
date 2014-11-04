@@ -1,31 +1,38 @@
 import numpy as np
-from numpy.linalg import norm
-# from physics import gravitational_acceleration
-import time
+from utils import generate_sphere_position_distribution, \
+    generate_mass_distribution, generate_velocities_distribution, save_points
+from physics import gravitational_acceleration
+from constants import AU, SUN_MASS, SECONDS_DAY
 
-N_ITER = 1000000
+N = 100
+STEPS = 1000
+DT = 10 * SECONDS_DAY
 
-r1 = np.array([0., 0., 0.])
-r2 = np.array([1., 1., 0.])
+particles_positions = generate_sphere_position_distribution(AU, N)
+masses = generate_mass_distribution(SUN_MASS/10000., N)
+velocities = generate_velocities_distribution(N, -100.0, 100.0)
+acelerations = np.zeros((N, 3))
 
-SUN_MASS = 1.9891E30   # Sun
-EARTH_MASS = 5.972E24    # Earth
+print "System initialized"
 
-i = 0
+# Euler to start TODO use leap frog or Velet
+while STEPS >= 0:
+    for i, p_i in enumerate(particles_positions):
+        m_i = masses[i]
+        for j, p_j in enumerate(particles_positions):
+            if i == j:
+                # not interacting with itself
+                continue
+            m_j = masses[j]
+            acc = gravitational_acceleration(m_j, p_i, p_j)
+            acelerations[i] += acc
+            # TODO apply 3rd Newton
 
-diff = r1 - r2
-diff_scalar_inv = 1. / (norm(diff))
-
-sum = np.zeros(3)
-
-start = time.time()
-
-# while i < N_ITER:
-sum = gravitational_acceleration(SUN_MASS, EARTH_MASS, diff, diff_scalar_inv, N_ITER)
-
-
-end = time.time()
-
-print 'Time taken: %s' % (end - start)
-
-print sum
+    velocities += (acelerations * DT)
+    particles_positions += (velocities * DT)
+    acelerations = np.zeros((N, 3))
+    STEPS -= 1
+    if STEPS % 100 == 0:
+        print "Voy por %s" % STEPS
+        print "Max velocity: %s" % velocities.max()
+        save_points(particles_positions, './data/positions_%s.csv' % STEPS)
