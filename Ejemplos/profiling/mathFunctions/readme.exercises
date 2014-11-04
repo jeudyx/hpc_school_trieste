@@ -1,0 +1,80 @@
+#####################################################################
+
+README for Profiling Exercises
+
+######################################################################
+
+This exercise will give students a familiarity with tools like gprof, perf, and valgrind
+profiling your serial applications.  The student is provided the mathFunctions program 
+which has three loops of different operations over arrays.  You will compile this with the 
+icc compiler and perform various profiling experiments on it.  
+
+This directory contains the C source files for the exercises, with a Makefile for compiling.
+Please take a look at the source and become familiar with it, notice the three functions 
+in the mathfun.c file.  Once compiled, you run the program by executing 
+
+./mathfun <N>
+
+N will be the length of the array that will be looped over to perform the math.
+
+Which of these functions do you think will take the longest?
+
+Step 1: Profiling with gprof
+
+gprof is an extremely simple but very powerful tool that one can use to quickly 
+generate a profile of virtually any compiled program. The Makefile is already set up
+to produce output for the gprof tool.  Notice that the CFLAGS variable has -pg in it.  
+Adding this to both the compilation and the linking phase of the program will produce output.
+
+You can see the full range of commands available to you with gprof by looking at the man page.
+
+For N = 1000,10000,100000,1000000,and 10000000: 
+
+  - Run the compiled program.
+  - Generate a gprof report by executing the command: gprof -b ./mathfun gmon.out > gprof.report.<N> 
+    {Replace <N> with the N that you used to do the run.}
+  - Explore the outputs, at the top you will see a flat profile, and at the bottom you will see a "Call graph".  
+
+How do each of these functions scale in time with size of the problem?  Why do you think that is?
+
+Step 2: Looking at hardware level counters with perf
+
+Now we will use the perf tool to create a profile of what the hardware is doing at each of these runs.
+
+For each size of N, let's messure the cycles, instructions, and l1 cache loads and misses.  Perform the 
+command:
+
+% perf stat --repeat 10 -e cycles:u -e instructions:u -e L1-dcache-loads:u -e L1-dcache-load-misses:u ./mathfun <N> > perf.<N>
+
+If you would like to see all of the hardware counters that you can measure, type:
+
+% perf list
+
+Feel free to explore as many as you would like.
+
+As the problem size gets larger, how do the hardware counters change?  Notice that you cannot get function level profiling with
+this tool.  So combining the information you obtained from gprof and perf, what do you think the next step would be in
+optimizing this tool.
+
+Step 3: valgrind and kcachegrind for a pretty profile
+
+For N = 10000000, use the following command:
+
+% valgrind --tool=callgrind ./mathfun 10000000
+% kcachegrind callgrind.out.*
+
+You will get a very nice simple gui presentation of the profile of the program.  Spend some time exploring this output, which is 
+quite extensive.
+
+Step 4. Add a math function to the program that you think will take longer than the other three. 
+
+RULES:
+	1. Cannot involve more than 2 1-D arrays.
+	2. The math operation must be expressed in no more than one term.
+	3. You can use functions from math.h, but you will have to alter the Makefile and program to accomodate.
+
+Reprofile the tool with the method of your choice and try to understand why the function you derived performs the way that it does.
+
+This completes this exercise.
+
+

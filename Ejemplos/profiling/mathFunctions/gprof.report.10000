@@ -1,0 +1,30 @@
+Flat profile:
+
+Each sample counts as 0.01 seconds.
+ no time accumulated
+
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  Ts/call  Ts/call  name    
+  0.00      0.00     0.00      100     0.00     0.00  divSumArray
+  0.00      0.00     0.00      100     0.00     0.00  sumArray
+  0.00      0.00     0.00      100     0.00     0.00  sumTwoArrays
+
+			Call graph
+
+
+granularity: each sample hit covers 2 byte(s) no time propagated
+
+index % time    self  children    called     name
+                0.00    0.00     100/100         main [9]
+[1]      0.0    0.00    0.00     100         divSumArray [1]
+-----------------------------------------------
+                0.00    0.00     100/100         main [9]
+[2]      0.0    0.00    0.00     100         sumArray [2]
+-----------------------------------------------
+                0.00    0.00     100/100         main [9]
+[3]      0.0    0.00    0.00     100         sumTwoArrays [3]
+-----------------------------------------------
+
+Index by function name
+
+   [1] divSumArray             [2] sumArray                [3] sumTwoArrays
