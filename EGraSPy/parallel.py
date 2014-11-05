@@ -1,3 +1,12 @@
+# TURN ON THE VIRTUAL ENVIRONMENT FOR YOUR APPLICATION
+try:
+    activate_this = '/share/apps/.virtualenvs/dev/bin/activate_this.py'
+    execfile(activate_this, dict(__file__=activate_this))
+except:
+    pass
+
+# To run this on the cluster: qsub -pe mpich 30 run_parallel.sh
+
 import mpi4py.MPI as MPI
 import numpy as np
 import time
@@ -13,9 +22,9 @@ comm = MPI.COMM_WORLD
 myid = comm.Get_rank()
 size = comm.Get_size()
 
-N = 1000
-STEPS = 1
-DT = SECONDS_DAY
+N = 5000
+STEPS = 5000
+DT = 10 * SECONDS_DAY
 
 if myid == 0:
     # System initialization done only on rot
@@ -46,12 +55,15 @@ end = start + chunk + (rest if myid == size - 1 else 0)
 print 'I am node %s and my calculation range is from %s to %s' % (myid, start, end)
 
 # Euler to start TODO use leap frog or Velet
+
+start_time = time.time()
+
 while itr <= STEPS:
-    start_time = time.time()
+
     for i in range(start, end):
         p_i = particles_positions[i]
         m_i = masses[i]
-        for j in range(0, N):
+        for j in range(i+1, end):
             if i == j:
                 # not interacting with itself
                 continue
@@ -60,9 +72,7 @@ while itr <= STEPS:
             acc = gravitational_acceleration(m_j, p_i, p_j)
             accelerations[i] += acc
             # TODO put back III Newton
-            # accelerations[j] -= (acc * m_i) / m_j
-
-    end_time = time.time()
+            accelerations[j] -= (acc * m_i) / m_j
 
     accelerations_sum = np.zeros((N, 3))
 
@@ -78,14 +88,21 @@ while itr <= STEPS:
     comm.Bcast([velocities, MPI.DOUBLE], root=0)
     accelerations = np.zeros((N, 3))
 
+    end_time = time.time()
+
+    if itr == 0 and myid == 0:
+        print "First forces calculation completed in: %s" % (end_time - start_time)
+
     itr += 1
-    if itr % 500 == 0:
-        print "Voy por %s" % itr
+
+    if myid == 0 and itr % 100 == 0:
+        print "Processing iteration %s" % itr
         print "Max velocity: %s -  Min velocity: %s" % (velocities.max(), velocities.min())
         save_points(particles_positions, './data/positions_%s.csv' % itr)
 
-print ' %s done. Avg velocity in system %s. Total mass: %s' % (myid,
-                                                               velocities.mean(),
-                                                               masses.sum() / SUN_MASS)
-
 MPI.Finalize()
+
+end_time = time.time()
+
+if myid == 0:
+    print 'Done. Avg velocity in system %s. Total time: %s' % (velocities.mean(), end_time - start_time)

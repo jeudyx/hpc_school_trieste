@@ -5,8 +5,8 @@ from utils import generate_sphere_position_distribution, \
 from physics import gravitational_acceleration
 from constants import AU, SUN_MASS, SECONDS_DAY
 
-N = 200
-STEPS = 50000
+N = 10000
+STEPS = 1
 DT = SECONDS_DAY
 
 particles_positions = generate_sphere_position_distribution(2*AU, N)
