@@ -35,13 +35,22 @@ def generate_sphere_position_distribution(radius, n):
     return np.array(positions)
 
 
-def generate_velocities_distribution(n, vmin, vmax):
-    return (vmax - vmin) * np.random.random_sample((n, 3)) + vmin
+def generate_velocities_distribution(n, vmin, vmax, no_z=False):
+    velocities = (vmax - vmin) * np.random.random_sample((n, 3)) + vmin
+    if no_z:
+        velocities[:, 2] = 0.0
+    return velocities
 
 
-def generate_mass_distribution(total_mass, n):
+def generate_mass_distribution(total_mass, n, variability=0.0):
     particle_mass = total_mass / n
-    return np.ones(n) * particle_mass
+    if variability == 0.0:
+        return np.ones(n) * particle_mass
+    else:
+        var_range = ((-1. * (variability * particle_mass) - particle_mass),
+                     ((variability * particle_mass) + particle_mass))
+        return np.ones(n) * particle_mass + \
+               ((var_range[1] - var_range[0]) * np.random.random_sample(n) + var_range[0])
 
 
 def save_points(points, path):

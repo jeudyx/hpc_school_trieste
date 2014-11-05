@@ -5,49 +5,54 @@ from utils import generate_sphere_position_distribution, \
 from physics import gravitational_acceleration
 from constants import AU, SUN_MASS, SECONDS_DAY
 
-N = 1000
-STEPS = 1
-DT = 10 * SECONDS_DAY
+N = 100
+STEPS = 50000
+DT = SECONDS_DAY
 
-particles_positions = generate_sphere_position_distribution(AU, N)
-masses = generate_mass_distribution(SUN_MASS/10000., N)
-velocities = generate_velocities_distribution(N, -100.0, 100.0)
-acelerations = np.zeros((N, 3))
+particles_positions = generate_sphere_position_distribution(2*AU, N)
+masses = generate_mass_distribution(SUN_MASS, N, variability=0.5)
+velocities = generate_velocities_distribution(N, -100.0, 100.0, no_z=True)
+accelerations = np.zeros((N, 3))
 
-print "System initialized"
+save_points(particles_positions, './data/positions_initial.csv')
+
+print "System initialized. Total mass: %s" % (masses.sum() / SUN_MASS)
 
 # Euler to start TODO use leap frog or Velet
 while STEPS > 0:
-    start = time.time()
-    for i, p_i in enumerate(particles_positions):
+#    start = time.time()
+    for i in range(0, N):
+        p_i = particles_positions[i]
         m_i = masses[i]
-        for j, p_j in enumerate(particles_positions):
+        for j in range(i+1, N):
             if i == j:
                 # not interacting with itself
                 continue
             m_j = masses[j]
+            p_j = particles_positions[j]
             acc = gravitational_acceleration(m_j, p_i, p_j)
-            acelerations[i] += acc
-            # TODO apply 3rd Newton
+            accelerations[i] += acc
+            # Take advantage of Newton 3rd law
+            accelerations[j] -= (acc * m_i) / m_j  # This may be unnecessary since all masses are equal
 
-    end = time.time()
+#    end = time.time()
 
-    print "Forces calculation done in %s" % (end - start)
+#    print "Forces calculation done in %s" % (end - start)
 
-    start = time.time()
+#    start = time.time()
 
-    velocities += (acelerations * DT)
+    velocities += (accelerations * DT)
     particles_positions += (velocities * DT)
-    acelerations = np.zeros((N, 3))
+    accelerations = np.zeros((N, 3))
 
-    end = time.time()
+#    end = time.time()
 
-    print "Velocities and positions update done in %s" % (end - start)
+#    print "Velocities and positions update done in %s" % (end - start)
 
     STEPS -= 1
-    if False and STEPS % 100 == 0:
+    if STEPS % 500 == 0:
         print "Voy por %s" % STEPS
-        print "Max velocity: %s" % velocities.max()
+        print "Max velocity: %s -  Min velocity: %s" % (velocities.max(), velocities.min())
         save_points(particles_positions, './data/positions_%s.csv' % STEPS)
 
 print 'Done. Avg velocity in system %s' % (velocities.mean())
