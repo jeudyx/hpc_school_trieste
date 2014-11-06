@@ -19,3 +19,7 @@ def gravitational_acceleration(mass_j, position_i, position_j):
     r_diff = position_i - position_j
 
     return -1.0 * (G * mass_j * r_diff) / (np.linalg.norm(r_diff)**3)
+
+
+def energy(masses, velocities):
+    return 0.5 * masses * np.linalg.norm(velocities)**2
