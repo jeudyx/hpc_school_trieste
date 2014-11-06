@@ -16,12 +16,11 @@ else:
     token[0] = myid
     comm.Send([token, MPI.INT], dest=myid+1, tag=100)
 
-
 if myid == 0:
     comm.Recv([token, MPI.INT], source=size-1, tag=100)
 else:
     comm.Recv([token, MPI.INT], source=myid-1, tag=100)
 
-print 'Soy %s y recibi de %s' % (myid, token)
+print 'I am process %s an received message from %s' % (myid, token)
 
 MPI.Finalize()

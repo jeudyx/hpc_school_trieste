@@ -30,11 +30,11 @@ result = numpy.array([0.], dtype='d')
 
 mysum = numpy.array(data[start:end].sum())
 
-print 'Soy proceso %s y mi rango es de %s a %s' % (myid, start, end), data[start:end], mysum
+print 'I am process %s and my range goes from %s to %s' % (myid, start, end), data[start:end], mysum
 
 comm.Reduce([mysum, MPI.DOUBLE], [result, MPI.DOUBLE], op=MPI.SUM, root=0)
 
 if myid == 0:
-    print 'Resultado de la suma reducida: %s. Original: %s' % (result[0], data.sum())
+    print 'Reduced sum is: %s. From original data: %s' % (result[0], data.sum())
 
 MPI.Finalize()
