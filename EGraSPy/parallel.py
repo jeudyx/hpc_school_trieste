@@ -22,14 +22,14 @@ comm = MPI.COMM_WORLD
 myid = comm.Get_rank()
 size = comm.Get_size()
 
-N = 5000
+N = 1000
 STEPS = 5000
 DT = 10 * SECONDS_DAY
 
 if myid == 0:
     # System initialization done only on rot
-    particles_positions = generate_sphere_position_distribution(2*AU, N)
-    masses = generate_mass_distribution(SUN_MASS/5000., N, variability=0.5)
+    particles_positions = generate_sphere_position_distribution(AU, N)
+    masses = generate_mass_distribution(SUN_MASS/1000., N, variability=0.5)
     velocities = generate_velocities_distribution(N, -100.0, 100.0, no_z=True)
     print "System initialized. Total mass: %s" % (masses.sum() / SUN_MASS)
     save_points(particles_positions, './data/positions_initial.csv')
@@ -63,7 +63,7 @@ while itr <= STEPS:
     for i in range(start, end):
         p_i = particles_positions[i]
         m_i = masses[i]
-        for j in range(i+1, end):
+        for j in range(i, N):
             if i == j:
                 # not interacting with itself
                 continue
@@ -71,8 +71,6 @@ while itr <= STEPS:
             p_j = particles_positions[j]
             acc = gravitational_acceleration(m_j, p_i, p_j)
             accelerations[i] += acc
-            # TODO put back III Newton
-            accelerations[j] -= (acc * m_i) / m_j
 
     accelerations_sum = np.zeros((N, 3))
 
@@ -80,7 +78,8 @@ while itr <= STEPS:
     comm.Reduce([accelerations, MPI.DOUBLE], [accelerations_sum, MPI.DOUBLE], op=MPI.SUM, root=0)
 
     if myid == 0:
-        # Update velocities and positions in root after syncronization
+        # Update velocities and positions in root after syncronization using Euler integration
+        # TODO use a better method: Leapfrog or Velet
         velocities += (accelerations * DT)
         particles_positions += (velocities * DT)
 
