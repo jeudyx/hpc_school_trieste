@@ -2,29 +2,30 @@
 Cython Module to contains physics
 """
 
-cimport numpy as np
-import numpy as np
 cdef double G = 6.67E-11
+from math import sqrt
 
-DTYPE = np.double
+cdef norm(double [:] vector):
+    return sqrt((vector[0] * vector[0]) + (vector[1] * vector[1]) + (vector[2] * vector[2]))
 
-cpdef np.ndarray[double, ndim=1] gravitational_acceleration(double mass1, double mass2,
-                                                           np.ndarray[double, ndim=1] r_diff,
-                                                           double r_diff_scalar_inv, int N):
+def gravitational_acceleration(mass_j, position_i, position_j):
     """
-    Calculates gravitational acceleration. As much calculations done
-    outside the function as possible
-    :param mass1 and mass2: masses of the bodies
-    :param r_diff:      numpy array with 3D coordinates of distance vector r1 - r2
-    :param r_diff_scalar_inv: the norm of r_diff
-    :return:
+    Calculates gravitational acceleration on particle i, by particle j
+    :param mass_j: masses of particle j
+    :param position_i: numpy array with 3D coordinates of particle i
+    :param position_j: numpy array with 3D coordinates of particle j
+    :return: numpy array with 3 components of gravitational acceleration
     """
 
-    cdef np.ndarray resp = np.zeros(3, dtype=DTYPE)
+    resp = [0., 0., 0.]
+    cdef double[3] r_diff
+    r_diff[0] = position_i[0] - position_j[0]
+    r_diff[1] = position_i[1] - position_j[1]
+    r_diff[2] = position_i[2] - position_j[2]
 
-    while N > 0:
-        resp += G * mass1 * mass2 * r_diff * r_diff_scalar_inv**3
-        N -= 1
+    resp[0] += -1.0 * (G * mass_j * r_diff[0]) / (norm(r_diff)**3)
+    resp[1] += -1.0 * (G * mass_j * r_diff[1]) / (norm(r_diff)**3)
+    resp[2] += -1.0 * (G * mass_j * r_diff[2]) / (norm(r_diff)**3)
 
     return resp
 
